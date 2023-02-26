@@ -2,17 +2,17 @@
  * Name:        dict.c
  * Description: Offline dictionary.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0123230200Z02261711L00219
+ * File ID:     0123230200Z0227230425L00219
  * License:     Public domain.
  */
-#define _CRT_SECURE_NO_WARNINGS
 #include <time.h>
 #include <stdio.h>
 #include <math.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "StoneValley/src/svset.h"
-#include "StoneValley/src/svtree.h"
+#include "svset.h"
+#include "svtree.h"
 
 typedef struct st_WORD
 {
@@ -169,10 +169,10 @@ int main(int argc, char ** argv)
 				size_t n, m, x;
 				srand(time(NULL));
 				printf("How many random words would you like to gen:");
-				scanf("%llu", &n);
+				(void)scanf("%llu", &n);
 				printf("\n");
-
-				i = (logf(i + 1) / logf(2));
+				/* Calculate the height of a tree. */
+				i = (size_t)(logf(i + 1) / logf(2));
 				for (m = 0; m < n; ++m)
 				{
 					x = 1 + rand() / ((RAND_MAX + 1u) / i);
