@@ -83,7 +83,7 @@ int main(int argc, char ** argv)
 	P_TRIE_A trie = treCreateTrieA();
 	size_t * result = NULL;
 
-	strcat(sFileName, "C:\\Users\\user1\\source\\repos\\ConsoleApplication2\\Debug\\dict.txt");
+	strcat(sFileName, "./dict.txt");
 	fp = fopen(sFileName, "rb");
 
 
