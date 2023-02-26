@@ -2,15 +2,17 @@
  * Name:        dict.c
  * Description: Offline dictionary.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0123230200Z0131232318L00179
+ * File ID:     0123230200Z02261711L00219
  * License:     Public domain.
  */
 #define _CRT_SECURE_NO_WARNINGS
+#include <time.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "svset.h"
-#include "svtree.h"
+#include "StoneValley/src/svset.h"
+#include "StoneValley/src/svtree.h"
 
 typedef struct st_WORD
 {
@@ -44,6 +46,28 @@ int cbftvs_alphabet(void * pitem, size_t param)
 	return CBF_CONTINUE;
 }
 
+int cbftvs_rwords(void * pitem, size_t param)
+{
+	if (--*(size_t *)param > 0)
+		if (rand() & 1)
+			printf("%s\n", ((P_WORD)P2P_TNODE_B(pitem)->pdata)->name);
+	return CBF_CONTINUE;
+}
+
+void GenerateARandomWord(P_BSTNODE pnode, size_t n)
+{
+	if (NULL == pnode)
+		return;
+	while (--n)
+	{
+		P_BSTNODE t = P2P_BSTNODE(pnode->knot.ppnode[rand() & 1]);
+		if (NULL == t)
+			break;
+		pnode = t;
+	}
+	printf("%s\n", ((P_WORD)(pnode->knot.pdata))->name);
+}
+
 static char sWord[BUFSIZ * 2] = { 0 };
 static char * p = sWord;
 
@@ -59,7 +83,7 @@ int main(int argc, char ** argv)
 	P_TRIE_A trie = treCreateTrieA();
 	size_t * result = NULL;
 
-	strcat(sFileName, "./dict.txt");
+	strcat(sFileName, "C:\\Users\\user1\\source\\repos\\ConsoleApplication2\\Debug\\dict.txt");
 	fp = fopen(sFileName, "rb");
 
 
@@ -126,6 +150,7 @@ int main(int argc, char ** argv)
 				printf("Type .h to show history.\n");
 				printf("Type .l[A] to show alphabet.\n");
 				printf("\tFor example ? .l Z.\n");
+				printf("Type .g to generate random words.\n");
 				printf("Type .? to show this notice.\n");
 			}
 			else if ('.' == sPattern[0] && 'h' == sPattern[1])
@@ -138,6 +163,21 @@ int main(int argc, char ** argv)
 				sPattern[3] = toupper(sPattern[3]);
 				printf("Alphabet:\n");
 				treTraverseBIn(*set, cbftvs_alphabet, toupper(sPattern[3]));
+			}
+			else if ('.' == sPattern[0] && 'g' == sPattern[1])
+			{
+				size_t n, m, x;
+				srand(time(NULL));
+				printf("How many random words would you like to gen:");
+				scanf("%llu", &n);
+				printf("\n");
+
+				i = (logf(i + 1) / logf(2));
+				for (m = 0; m < n; ++m)
+				{
+					x = 1 + rand() / ((RAND_MAX + 1u) / i);
+					GenerateARandomWord(*set, x);
+				}
 			}
 			else if (0 != (j = atoi(sPattern)))
 			{
