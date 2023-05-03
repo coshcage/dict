@@ -2,7 +2,7 @@
  * Name:        dict.c
  * Description: Offline dictionary.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0123230200Z0227230425L00219
+ * File ID:     0123230200Z0503231750L00219
  * License:     Public domain.
  */
 #include <time.h>
@@ -156,13 +156,13 @@ int main(int argc, char ** argv)
 			else if ('.' == sPattern[0] && 'h' == sPattern[1])
 			{
 				printf("History:\n");
-				treTraverseBIn(*set, cbftvs_history, 0);
+				treTraverseBYIn(*set, cbftvs_history, 0);
 			}
 			else if ('.' == sPattern[0] && 'l' == sPattern[1] && ' ' == sPattern[2])
 			{
 				sPattern[3] = toupper(sPattern[3]);
 				printf("Alphabet:\n");
-				treTraverseBIn(*set, cbftvs_alphabet, toupper(sPattern[3]));
+				treTraverseBYIn(*set, cbftvs_alphabet, toupper(sPattern[3]));
 			}
 			else if ('.' == sPattern[0] && 'g' == sPattern[1])
 			{
@@ -211,7 +211,7 @@ int main(int argc, char ** argv)
 		printf("Can not open file.\n");
 
 	printf("History:\n");
-	treTraverseBIn(*set, cbftvs_history, 0);
+	treTraverseBYIn(*set, cbftvs_history, 0);
 	setDeleteT(set);
 	treDeleteTrieA(trie, sizeof(char));
 	return 0;
