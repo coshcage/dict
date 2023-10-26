@@ -2,7 +2,7 @@
  * Name:        dict.c
  * Description: Offline dictionary.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0123230200Z0503231750L00219
+ * File ID:     0123230200Z1026232100L00267
  * License:     Public domain.
  */
 #include <time.h>
@@ -13,6 +13,7 @@
 #include <string.h>
 #include "svset.h"
 #include "svtree.h"
+#include "svregex.h"
 
 typedef struct st_WORD
 {
@@ -34,15 +35,15 @@ int cbfcmpchar(const void * px, const void * py)
 
 int cbftvs_history(void * pitem, size_t param)
 {
-	if (((P_WORD)P2P_TNODE_B(pitem)->pdata)->times)
-		printf("%s\t%lld\n", ((P_WORD)P2P_TNODE_B(pitem)->pdata)->name, ((P_WORD)P2P_TNODE_B(pitem)->pdata)->times);
+	if (((P_WORD)P2P_TNODE_BY(pitem)->pdata)->times)
+		printf("%s\t%lld\n", ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->name, ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->times);
 	return CBF_CONTINUE;
 }
 
 int cbftvs_alphabet(void * pitem, size_t param)
 {
-	if (toupper(((P_WORD)P2P_TNODE_B(pitem)->pdata)->name[0]) == param)
-		printf("%s\n", ((P_WORD)P2P_TNODE_B(pitem)->pdata)->name);
+	if (toupper(((P_WORD)P2P_TNODE_BY(pitem)->pdata)->name[0]) == param)
+		printf("%s\n", ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->name);
 	return CBF_CONTINUE;
 }
 
@@ -50,7 +51,27 @@ int cbftvs_rwords(void * pitem, size_t param)
 {
 	if (--*(size_t *)param > 0)
 		if (rand() & 1)
-			printf("%s\n", ((P_WORD)P2P_TNODE_B(pitem)->pdata)->name);
+			printf("%s\n", ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->name);
+	return CBF_CONTINUE;
+}
+
+int cbftvs_pattmatch(void * pitem, size_t param)
+{
+	size_t i, j, k, l;
+	P_WORD pw = (P_WORD)P2P_TNODE_BY(pitem)->pdata;
+	P_DFA dfa = (P_DFA)param;
+	j = strlen(pw->name);
+	k = 1;
+	for (i = 0; i < j; ++i)
+	{
+		k = NextState(dfa, k, pw->name[i]);
+		strGetValueMatrix(&l, dfa, k, 0, sizeof(size_t));
+		if (l & SIGN)
+		{
+			printf("\t%lld %s\n", pw->id, pw->name);
+			break;
+		}
+	}
 	return CBF_CONTINUE;
 }
 
@@ -117,6 +138,15 @@ int main(int argc, char ** argv)
 			}
 		}
 		printf("%lld words loaded.\n", i);
+		printf("Type [WORD] or [NUMBER] to search.\n");
+		printf("\tFor example ? Apple ? 10536\n");
+		printf("Type .h to show history.\n");
+		printf("Type .l [A] to show alphabet.\n");
+		printf("\tFor example ? .l Z\n");
+		printf("Type .g to generate random words.\n");
+		printf("Type .p [regex] to show words as regex pattern.\n");
+		printf("\tFor example ? .p Dis(a|s)\n");
+		printf("Type .? to show this notice.\n");
 		do
 		{
 			printf("? ");
@@ -148,9 +178,11 @@ int main(int argc, char ** argv)
 				printf("Type [WORD] or [NUMBER] to search.\n");
 				printf("\tFor example ? Apple ? 10536\n");
 				printf("Type .h to show history.\n");
-				printf("Type .l[A] to show alphabet.\n");
-				printf("\tFor example ? .l Z.\n");
+				printf("Type .l [A] to show alphabet.\n");
+				printf("\tFor example ? .l Z\n");
 				printf("Type .g to generate random words.\n");
+				printf("Type .p [regex] to show words as regex pattern.\n");
+				printf("\tFor example ? .p Dis(a|s)\n");
 				printf("Type .? to show this notice.\n");
 			}
 			else if ('.' == sPattern[0] && 'h' == sPattern[1])
@@ -178,6 +210,22 @@ int main(int argc, char ** argv)
 					x = 1 + rand() / ((RAND_MAX + 1u) / i);
 					GenerateARandomWord(*set, x);
 				}
+			}
+			else if ('.' == sPattern[0] && 'p' == sPattern[1] && ' ' == sPattern[2])
+			{
+				wchar_t pattern[BUFSIZ] = { 0 };
+				wchar_t * p = pattern;
+				P_DFA dfa = NULL;
+				mbstowcs(pattern, &sPattern[3], strlen(&sPattern[3]));
+				dfa = CompileRegex2DFA(&p);
+
+				if (dfa)
+				{
+					treMorrisTraverseBYIn(*set, cbftvs_pattmatch, (size_t)dfa);
+					DestroyDFA(dfa);
+				}
+				else
+					printf("Invalid regular expression!\n");
 			}
 			else if (0 != (j = atoi(sPattern)))
 			{
