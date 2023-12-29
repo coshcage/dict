@@ -2,7 +2,7 @@
  * Name:        dict.c
  * Description: Offline dictionary.
  * Author:      cosh.cage#hotmail.com
- * File ID:     0123230200Z1026232100L00267
+ * File ID:     0123230200Z1229230442L00263
  * License:     Public domain.
  */
 #include <time.h>
@@ -36,7 +36,7 @@ int cbfcmpchar(const void * px, const void * py)
 int cbftvs_history(void * pitem, size_t param)
 {
 	if (((P_WORD)P2P_TNODE_BY(pitem)->pdata)->times)
-		printf("%s\t%lld\n", ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->name, ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->times);
+		printf("%s\t%ld\n", ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->name, ((P_WORD)P2P_TNODE_BY(pitem)->pdata)->times);
 	return CBF_CONTINUE;
 }
 
@@ -68,7 +68,7 @@ int cbftvs_pattmatch(void * pitem, size_t param)
 		strGetValueMatrix(&l, dfa, k, 0, sizeof(size_t));
 		if (l & SIGN)
 		{
-			printf("\t%lld %s\n", pw->id, pw->name);
+			printf("\t%ld %s\n", pw->id, pw->name);
 			break;
 		}
 	}
@@ -94,6 +94,19 @@ static char * p = sWord;
 
 static char sFileName[BUFSIZ] = { 0 };
 static char sPattern[BUFSIZ] = { 0 };
+
+void PrintInfo()
+{
+	printf("Type [WORD] or [NUMBER] to search.\n");
+	printf("\tFor example ? Apple ? 10536\n");
+	printf("Type .h to show history.\n");
+	printf("Type .l [A] to show alphabet.\n");
+	printf("\tFor example ? .l Z\n");
+	printf("Type .g to generate random words.\n");
+	printf("Type .p [regex] to show words as regex pattern.\n");
+	printf("\tFor example ? .p Dis(a|s)\n");
+	printf("Type .? to show this notice.\n");
+}
 
 int main(int argc, char ** argv)
 {
@@ -137,16 +150,8 @@ int main(int argc, char ** argv)
 				p = sWord;
 			}
 		}
-		printf("%lld words loaded.\n", i);
-		printf("Type [WORD] or [NUMBER] to search.\n");
-		printf("\tFor example ? Apple ? 10536\n");
-		printf("Type .h to show history.\n");
-		printf("Type .l [A] to show alphabet.\n");
-		printf("\tFor example ? .l Z\n");
-		printf("Type .g to generate random words.\n");
-		printf("Type .p [regex] to show words as regex pattern.\n");
-		printf("\tFor example ? .p Dis(a|s)\n");
-		printf("Type .? to show this notice.\n");
+		printf("%ld words loaded.\n", i);
+		PrintInfo();
 		do
 		{
 			printf("? ");
@@ -158,7 +163,7 @@ int main(int argc, char ** argv)
 			result = treSearchTrieA(trie, sPattern, strlen(sPattern), sizeof(char), cbfcmpchar);
 			if (result)
 			{
-				printf("\t%lld %s  ", ((P_WORD)*result)->id, ((P_WORD)*result)->name);
+				printf("\t%ld %s  ", ((P_WORD)*result)->id, ((P_WORD)*result)->name);
 				++((P_WORD)*result)->times;
 
 				/* Redirect to the word on the disk. */
@@ -175,33 +180,25 @@ int main(int argc, char ** argv)
 			}
 			else if ('.' == sPattern[0] && '?' == sPattern[1])
 			{
-				printf("Type [WORD] or [NUMBER] to search.\n");
-				printf("\tFor example ? Apple ? 10536\n");
-				printf("Type .h to show history.\n");
-				printf("Type .l [A] to show alphabet.\n");
-				printf("\tFor example ? .l Z\n");
-				printf("Type .g to generate random words.\n");
-				printf("Type .p [regex] to show words as regex pattern.\n");
-				printf("\tFor example ? .p Dis(a|s)\n");
-				printf("Type .? to show this notice.\n");
+				PrintInfo();
 			}
 			else if ('.' == sPattern[0] && 'h' == sPattern[1])
 			{
 				printf("History:\n");
-				treTraverseBYIn(*set, cbftvs_history, 0);
+				treTraverseBYIn(P2P_TNODE_BY(*set), cbftvs_history, 0);
 			}
 			else if ('.' == sPattern[0] && 'l' == sPattern[1] && ' ' == sPattern[2])
 			{
 				sPattern[3] = toupper(sPattern[3]);
 				printf("Alphabet:\n");
-				treTraverseBYIn(*set, cbftvs_alphabet, toupper(sPattern[3]));
+				treTraverseBYIn(P2P_TNODE_BY(*set), cbftvs_alphabet, toupper(sPattern[3]));
 			}
 			else if ('.' == sPattern[0] && 'g' == sPattern[1])
 			{
 				size_t n, m, x;
 				srand(time(NULL));
 				printf("How many random words would you like to gen:");
-				(void)scanf("%llu", &n);
+				(void)scanf("%lu", &n);
 				printf("\n");
 				/* Calculate the height of a tree. */
 				i = (size_t)(logf(i + 1) / logf(2));
@@ -214,14 +211,13 @@ int main(int argc, char ** argv)
 			else if ('.' == sPattern[0] && 'p' == sPattern[1] && ' ' == sPattern[2])
 			{
 				wchar_t pattern[BUFSIZ] = { 0 };
-				wchar_t * p = pattern;
 				P_DFA dfa = NULL;
 				mbstowcs(pattern, &sPattern[3], strlen(&sPattern[3]));
-				dfa = CompileRegex2DFA(&p);
+				dfa = CompileRegex2DFA(pattern);
 
 				if (dfa)
 				{
-					treMorrisTraverseBYIn(*set, cbftvs_pattmatch, (size_t)dfa);
+					treMorrisTraverseBYIn(P2P_TNODE_BY(*set), cbftvs_pattmatch, (size_t)dfa);
 					DestroyDFA(dfa);
 				}
 				else
@@ -232,7 +228,7 @@ int main(int argc, char ** argv)
 				P_BSTNODE pnode = treBSTFindData_A(*set, &j, cbfcmpid);
 				if (pnode)
 				{
-					printf("\t%lld %s  ", ((P_WORD)(pnode->knot.pdata))->id, ((P_WORD)(pnode->knot.pdata))->name);
+					printf("\t%ld %s  ", ((P_WORD)(pnode->knot.pdata))->id, ((P_WORD)(pnode->knot.pdata))->name);
 					++((P_WORD)(pnode->knot.pdata))->times;
 
 					/* Redirect to the word on the disk. */
@@ -259,7 +255,7 @@ int main(int argc, char ** argv)
 		printf("Can not open file.\n");
 
 	printf("History:\n");
-	treTraverseBYIn(*set, cbftvs_history, 0);
+	treTraverseBYIn(P2P_TNODE_BY(*set), cbftvs_history, 0);
 	setDeleteT(set);
 	treDeleteTrieA(trie, sizeof(char));
 	return 0;
